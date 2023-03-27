@@ -4,12 +4,11 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
-// import DiscordProvider from "next-auth/providers/discord";
-import CredentialsProvider from "next-auth/providers/credentials";
+import DiscordProvider from "next-auth/providers/discord";
+import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "@/env.mjs";
 import { prisma } from "@/server/db";
-import { api } from "@/utils/api";
 import { appCaller } from "./api/root";
 
 /**
@@ -40,22 +39,50 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
+    jwt({ token, account, user }) {
+      // console.log({ token, user, account });
+      token.user = user;
+      return token;
+    },
+    session({ session, user, token }) {
+      // console.log({ session, user, token });
+
+      if (token.user) {
+        session.user = token.user as any;
         // session.user.role = user.role; <-- put other properties on the session here
       }
+
       return session;
     },
   },
   adapter: PrismaAdapter(prisma),
+  logger: {
+    error(code, metadata) {
+      console.log({ type: "inside error logger", code, metadata });
+    },
+    warn(code) {
+      console.log({ type: "inside warn logger", code });
+    },
+    debug(code, metadata) {
+      console.log({ type: "inside debug logger", code, metadata });
+    },
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60,
+    updateAge: 60 * 60 - 10 * 60,
+  },
+  pages: {
+    signIn: "/auth/login",
+    newUser: "/auth/register",
+  },
   providers: [
-    // DiscordProvider({
-    //   clientId: env.DISCORD_CLIENT_ID,
-    //   clientSecret: env.DISCORD_CLIENT_SECRET,
-    // }),
-    CredentialsProvider({
-      name: "Custom Login",
+    DiscordProvider({
+      clientId: env.DISCORD_CLIENT_ID,
+      clientSecret: env.DISCORD_CLIENT_SECRET,
+    }),
+    Credentials({
+      name: "Credentials",
       credentials: {
         email: {
           label: "Email",
@@ -71,11 +98,11 @@ export const authOptions: NextAuthOptions = {
           email: string;
           password: string;
         };
-        const response = await appCaller.user.login({ email, password });
+        const { user } = await appCaller.user.login({ email, password });
 
         return {
-          id: response.user.id
-        }
+          id: user.id,
+        };
       },
     }),
     /**

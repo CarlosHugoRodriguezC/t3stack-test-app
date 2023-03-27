@@ -10,7 +10,6 @@ import { compareSync, hashSync } from "bcryptjs";
 
 import { prisma } from "@/server/db";
 import { TRPCError } from "@trpc/server";
-import { signToken } from "@/utils/jwt";
 
 const registerInput = z.object({
   name: z.string(),
@@ -28,7 +27,6 @@ const loginInput = z.object({
 });
 
 const loginOutput = z.object({
-  token: z.string(),
   user: z.object({
     id: z.string(),
     name: z.string(),
@@ -84,14 +82,7 @@ const handleLogin = async (
       message: "Invalid Credentials",
     });
 
-  const token = signToken(
-    existingUser.id,
-    existingUser.email || "no email",
-    existingUser.name || "no name"
-  );
-
   return {
-    token: token,
     user: {
       id: existingUser.id,
       email: existingUser.email || "no email",

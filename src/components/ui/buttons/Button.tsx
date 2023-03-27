@@ -1,32 +1,32 @@
 import React, { ButtonHTMLAttributes, FC } from "react";
 
-enum ButtonColor {
-  primary = "bg-blue-200",
-  primaryTonal = "bg-blue-100",
-  secondary = "bg-indigo-200",
-  secondaryTonal = "bg-indigo-100",
-  white = "bg-white",
-  black = "bg-black text-white",
+enum ButtonColors {
+  primary = "bg-blue-300",
+  primaryTonal = "bg-blue-200",
+  secondary = "bg-indigo-300",
+  secondaryTonal = "bg-indigo-200",
+  light = "bg-white",
+  dark = "bg-dark text-white",
 }
 
-type ButtonColorOptions = keyof typeof ButtonColor;
+type ButtonColorsOptions = keyof typeof ButtonColors;
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   text?: string;
-  color?: ButtonColorOptions;
+  color?: ButtonColorsOptions;
 }
 
 export const Button: FC<Props> = (props) => {
-  const { text, children, color = "white", className, ...attributes } = props;
+  const { text, children, className, color = "light", ...attributes } = props;
   return (
     <button
       className={
         className ??
-        `flex h-10 w-full items-center justify-center rounded-lg transition-colors duration-500 ease-in-out hover:bg-opacity-70 ${ButtonColor[color]}`
+        `hover: w-full rounded-lg py-3 px-5 transition-colors duration-500 ease-in-out hover:bg-opacity-70 ${ButtonColors[color]}`
       }
       {...attributes}
     >
-      {text ?? children ?? "No content provided"}
+      {children ?? text ?? "Content not provided"}
     </button>
   );
 };
